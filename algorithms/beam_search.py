@@ -45,23 +45,23 @@ class LocalBeamSearchSolver(LocalSearchSolver):
         def rank(s: State):
             return (cost(s), s.path, s.departure_time)
 
+
         beam = {problem.generate_initial_state()}
-        attempts = 0
-        while len(beam) < K and attempts < 20 * K:
+        tries = 0
+        while len(beam) < K and tries < 20* K:
             beam.add(random_state(problem))
-            attempts += 1
-        beam = sorted(beam, key=rank)[:K]
+            tries +=1
+        beam=sorted(beam, key=rank)[:K]
         self.history.append(cost(beam[0]))
 
-        for _ in range(self.max_iterations):
-            pool = set(beam)
+        for empty in range(self.max_iterations):
+            pool=set(beam)
             for s in beam:
                 pool.update(get_neighbors(s, problem))
             new_beam = sorted(pool, key=rank)[:K]
             self.history.append(cost(new_beam[0]))
-            if set(new_beam) == set(beam):
+            if set(new_beam)==set(beam):
                 break
             beam = new_beam
-
-        best = beam[0]
-        return best, cost(best)
+        best= beam[0]
+        return best,cost(best)
