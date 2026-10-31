@@ -2,12 +2,12 @@
 algorithms/genetic_algorithm.py
 Population-based optimization using selection, recombination, and mutation.
 """
-
-from typing import Tuple
+import random
+from typing import Tuple, Dict, List
 from algorithms.base import LocalSearchSolver
 from core.state import State
 from core.problem import CommuteProblem
-from algorithms.operators import get_neighbors, crossover
+from algorithms.operators import get_neighbors, crossover, random_state
 
 
 class GeneticAlgorithmSolver(LocalSearchSolver):
@@ -34,5 +34,48 @@ class GeneticAlgorithmSolver(LocalSearchSolver):
         Encouraged:
         - Experimenting with population size, selection pressure, and operator rates to balance exploration vs. exploitation.
         """
-        # TODO: Implement Genetic Algorithm
-        raise NotImplementedError("Implement solve() in algorithms/genetic_algorithm.py")
+        problem =self.problem
+        self.history=[]
+        cost_cache: Dict[State, float]={}
+
+        def cost(s:State)->float:
+            if s not in cost_cache:
+                cost_cache[s] = problem.evaluate(s)
+            return cost_cache[s]
+        
+        def fitness(s:State)->float:
+            return 1.0 /(1.0+ cost(s))
+        def tournament(pop: List[State]) -> State:
+            contenders = random.sample(pop, min(self.tournament_size, len(pop)))
+            return max(contenders, key=fitness)
+
+        pop: List[State] = [problem.generate_initial_state()]
+        while len(pop) < self.population_size:
+            pop.append(random_state(problem))
+
+        best = min(pop, key=cost)
+        self.history.append(cost(best))
+
+        n_elite = max(0, min(self.elitism, self.population_size))
+        for _ in range(self.generations):
+            ranked = sorted(pop, key=lambda s: (cost(s), s.path, s.departure_time))
+            next_pop: List[State] = ranked[:n_elite]
+
+            while len(next_pop) < self.population_size:
+                p1, p2 = tournament(pop), tournament(pop)
+                child = crossover(p1, p2, problem) if random.random() < self.crossover_rate else p1
+                if random.random() < self.mutation_rate:
+                    options = get_neighbors(child, problem)
+                    if options:
+                        child = random.choice(options)
+                if not problem.is_valid_state(child):
+                    child = p1
+                next_pop.append(child)
+
+            pop = next_pop
+            gen_best = min(pop, key=cost)
+            if cost(gen_best) < cost(best):
+                best = gen_best
+            self.history.append(cost(best))
+
+        return best, cost(best)
