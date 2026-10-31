@@ -39,3 +39,24 @@ class SimulatedAnnealingSolver(LocalSearchSolver):
         current_cost = problem.evaluate(current)
         best_state, best_cost = current, current_cost
         self.history.append(best_cost)
+
+        T = self.initial_temp
+        for i in range(self.max_iterations):
+            if  T < self.min_temp:
+                break
+            neighbors = get_neighbors(current,problem)
+            if not neighbors:
+                break
+            next_random = random.choice(neighbors)
+            next_cost = problem.evaluate(next_random)
+            delta = next_cost-current_cost
+
+            if delta < 0 or random.random() < math.exp(-delta / T):
+                current, current_cost = next_random, next_cost
+                if current_cost < best_cost:
+                    best_state, best_cost = current, current_cost
+
+            self.history.append(best_cost)
+            T *= self.cooling_rate
+
+        return best_state, best_cost
