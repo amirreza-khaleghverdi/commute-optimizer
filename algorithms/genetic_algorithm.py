@@ -18,6 +18,7 @@ class GeneticAlgorithmSolver(LocalSearchSolver):
         self.crossover_rate: float = self.params.get("crossover_rate", 0.8)
         self.mutation_rate: float = self.params.get("mutation_rate", 0.2)
         self.elitism: int = self.params.get("elitism", 2)
+        self.tournament_size: int = self.params.get("tournament_size", 3)
 
     def solve(self) -> Tuple[State, float]:
         """
