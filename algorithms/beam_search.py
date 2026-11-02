@@ -41,7 +41,7 @@ class LocalBeamSearchSolver(LocalSearchSolver):
         def cost(s: State)-> float:
             if s not in cost_cache:
                 cost_cache[s]=problem.evaluate(s)
-                return cost_cache[s]
+            return cost_cache[s]
         def rank(s: State):
             return (cost(s), s.path, s.departure_time)
 
